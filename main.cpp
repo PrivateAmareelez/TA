@@ -1,5 +1,5 @@
 #include <vector>
-#include <set>
+#include <assert.h>
 
 using namespace std;
 
@@ -7,57 +7,74 @@ using namespace std;
 
 #include <fstream>
 
-ifstream cin("concert.in");
-ofstream cout("concert.out");
+ifstream cin("in.txt");
+ofstream cout("out.txt");
 #else
 #include <iostream>
 #endif
+
+const long long mod = 1E9 + 7;
 
 int main() {
     ios_base::sync_with_stdio(false);
     cin.tie(0);
 
-    int n, m;
-    long long d;
-    cin >> n >> m >> d;
-    vector<long long> songs(n);
-    for (int i = 0; i < n; i++)
-        cin >> songs[i];
+    long long n;
+    cin >> n;
 
-    vector<vector<long long> > v(n, vector<long long>(n, 0));
-    for (int i = n - 1; i >= 0; i--) {
-        multiset<long long, greater<long long> > s;
-        long long currTime = 0;
-
-        for (int j = i; j < n; j++) {
-            if (currTime + songs[j] <= d) {
-                s.insert(songs[j]);
-                currTime += songs[j];
-            } else if (!s.empty() && *s.begin() > songs[j]) {
-                currTime -= *s.begin() - songs[j];
-                s.erase(s.begin());
-                s.insert(songs[j]);
-            }
-            v[i][j] = s.size();
-        }
+    if (n % 2 == 1) {
+        cout << 0 << "\n";
+        return 0;
     }
 
-    vector<vector<long long> > dp(n, vector<long long>(m + 1, 0));
-    for (int i = 0; i < n; i++)
-        dp[i][1] = v[0][i];
+    vector<vector<long long> > dp(n + 1, vector<long long>(8, 0));
+
+    dp[0][0] = 1;
 
     for (int i = 0; i < n; i++) {
-        for (int j = 2; j <= m; j++) {
-            long long tempAns = 0;
-            for (int k = 0; k < i; k++) {
-                tempAns = max(tempAns, dp[k][j - 1] + v[k + 1][i]);
+        for (int j = 0; j <= 7; j++) {
+            switch (j) {
+                case 0: {
+                    dp[i][3] = (dp[i][3] + dp[i][j]) % mod;
+                    dp[i][6] = (dp[i][6] + dp[i][j]) % mod;
+                    dp[i + 1][7] = (dp[i + 1][7] + 3 * dp[i][j]) % mod;
+                    break;
+                }
+                case 1: {
+                    dp[i][7] = (dp[i][7] + dp[i][j]) % mod;
+                    dp[i + 1][6] = (dp[i + 1][6] + 2 * dp[i][j]) % mod;
+                    break;
+                }
+                case 2: {
+                    dp[i + 1][5] = (dp[i + 1][5] + dp[i][j]) % mod;
+                    break;
+                }
+                case 3: {
+                    dp[i + 1][4] = (dp[i + 1][4] + dp[i][j]) % mod;
+                    break;
+                }
+                case 4: {
+                    dp[i][7] = (dp[i][7] + dp[i][j]) % mod;
+                    dp[i + 1][3] = (dp[i + 1][3] + 2 * dp[i][j]) % mod;
+                    break;
+                }
+                case 5: {
+                    dp[i + 1][2] = (dp[i + 1][2] + dp[i][j]) % mod;
+                    break;
+                }
+                case 6: {
+                    dp[i + 1][1] = (dp[i + 1][1] + dp[i][j]) % mod;
+                    break;
+                }
+                case 7: {
+                    dp[i + 1][0] = (dp[i + 1][0] + dp[i][j]) % mod;
+                    break;
+                }
             }
-
-            dp[i][j] = max(v[0][i], tempAns);
         }
     }
 
-    cout << dp[n - 1][m] << "\n";
-
+    cout << dp[n - 1][7] << "\n";
+    //(4*6^(n/2)+1)/5
     return 0;
 }
