@@ -1,4 +1,5 @@
 #include <vector>
+#include <stack>
 #include <list>
 
 using namespace std;
@@ -13,50 +14,10 @@ ofstream cout("output.txt");
 #include <iostream>
 #endif
 
-vector<int> coverWithRoot, anyCover;
-vector<vector<int> > g;
-vector<char> usedAny, usedRoot;
-
-int calcCoverWithRoot(int);
-
-int calcAnyCover(int v) {
-    if (usedAny[v] == true)
-        return anyCover[v];
-
-    if (g[v].size() == 0) {
-        anyCover[v] = 0;
-        usedAny[v] = true;
-        return anyCover[v];
-    }
-
-    int sumOfChilds = 0;
-    for (int i = 0; i < g[v].size(); i++) {
-        sumOfChilds += calcCoverWithRoot(g[v][i]);
-    }
-    anyCover[v] = min(calcCoverWithRoot(v), sumOfChilds);
-    usedAny[v] = true;
-    return anyCover[v];
-}
-
-int calcCoverWithRoot(int v) {
-    if (usedRoot[v] == true)
-        return coverWithRoot[v];
-
-    if (g[v].size() == 0) {
-        coverWithRoot[v] = 1;
-        usedRoot[v] = true;
-        return coverWithRoot[v];
-    }
-
-    int sumOfChilds = 1;
-    for (int i = 0; i < g[v].size(); i++) {
-        sumOfChilds += calcAnyCover(g[v][i]);
-    }
-    coverWithRoot[v] = sumOfChilds;
-    usedRoot[v] = true;
-    return coverWithRoot[v];
-}
-
+vector<list<int> > g;
+vector<int> degree;
+stack<int> s;
+vector<char> flag;
 
 int main() {
     ios_base::sync_with_stdio(false);
@@ -64,25 +25,40 @@ int main() {
 
     int n;
     cin >> n;
-    g.resize(n);
-    coverWithRoot.resize(n);
-    anyCover.resize(n);
-    usedAny.resize(n, 0);
-    usedRoot.resize(n, 0);
 
+    g.resize(n);
+    degree.resize(n, 0);
+    flag.resize(n);
     for (int i = 0; i < n; i++) {
-        int deg;
-        cin >> deg;
-        for (int j = 0; j < deg; j++) {
-            int x;
-            cin >> x;
-            x--;
-            if (x > i)
-                g[i].push_back(x);
+        cin >> degree[i];
+
+        for (int j = 0; j < degree[i]; j++) {
+            int v;
+            cin >> v;
+            v--;
+            g[i].push_back(v);
         }
+
+        if (degree[i] == 1)
+            s.push(i);
     }
 
-    int ans = calcAnyCover(0);
+    int ans = 0;
+    while (!s.empty()) {
+        int v = s.top();
+        s.pop();
+
+        int parent = g[v].front();
+        if (flag[parent] == false && flag[v] == false){
+            flag[parent] = true;
+            ans++;
+        }
+
+        degree[parent]--;
+        if (degree[parent] == 1)
+            s.push(parent);
+    }
+
     cout << ans << "\n";
     return 0;
 }
